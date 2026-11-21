@@ -1,24 +1,12 @@
-"""
-analisis_biblioteca.py
-Actividad independiente - Clase 8 (Pandas + Seaborn).
-
-EDA, limpieza y preparación de los datos del proyecto Biblioteca COTECNOVA.
-El producto final es una tabla con un registro por préstamo, lista para un
-modelo que prediga si un préstamo se devolverá con retraso.
-
-Avance 2 (Clase 7 - preparación de datos): se agregó la revisión de duplicados,
-categorías, tipos, valores imposibles y atípicos, la tabla antes / después y la
-exportación del dataset limpio a data/proyecto_limpio.csv.
-"""
 from pathlib import Path
 
 import matplotlib
-matplotlib.use("Agg")  
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from scipy.stats import chi2_contingency 
+from scipy.stats import chi2_contingency
 
 sns.set_theme(style="whitegrid", context="notebook")
 
@@ -27,9 +15,9 @@ RAIZ = Path(__file__).resolve().parents[1]
 DATA = RAIZ / "data"
 GRAFICOS = RAIZ / "outputs" / "graficos"
 SALIDA_ML = RAIZ / "outputs" / "prestamos_preparados_ml.csv"
-RUTA_LIMPIO = DATA / "proyecto_limpio.csv"          # dataset limpio pedido en el Avance 2
+RUTA_LIMPIO = DATA / "proyecto_limpio.csv"
 SALIDA_ANTES_DESPUES = RAIZ / "outputs" / "antes_despues.csv"
-RUTA_LIBROS = DATA / "libros_demanda.csv"            # dataset por libro (segundo perceptrón)
+RUTA_LIBROS = DATA / "libros_demanda.csv"
 
 TABLAS = [
     "libro", "ejemplar", "genero", "libro_genero", "editorial",
@@ -41,7 +29,7 @@ DETALLADAS = ["prestamo", "ejemplar", "usuario"]
 
 COLUMNAS_USUARIO = ["id_usuario", "rol", "limite_prestamos", "fecha_registro"]
 
-# Llave primaria de cada tabla (en las tablas de relación la llave son dos columnas)
+
 LLAVES = {
     "libro": ["id_libro"], "ejemplar": ["id_ejemplar"], "genero": ["id_genero"],
     "editorial": ["id_editorial"], "autor": ["id_autor"], "usuario": ["id_usuario"],
@@ -50,16 +38,16 @@ LLAVES = {
     "prestamo_ejemplar": ["id_prestamo", "id_ejemplar"],
 }
 
-# Columnas de texto con pocas categorías que se usan en el proyecto
+
 CATEGORICAS = [("usuario", "rol"), ("prestamo_ejemplar", "estado"),
                ("ejemplar", "tipo_material")]
 
 
 
-# 1. CARGA Y EXPLORACIÓN
+
 
 def cargar_tablas():
-    """Carga cada CSV de data/ en un diccionario de DataFrames."""
+    
     tablas = {}
     for nombre in TABLAS:
         ruta = DATA / f"{nombre}.csv"
@@ -73,7 +61,7 @@ def cargar_tablas():
 
 
 def explorar_tabla(nombre, df, detallada):
-    """head(), info(), describe() e isnull().sum() de una tabla."""
+    
     print("\n" + "=" * 70)
     print(f"TABLA: {nombre}  ({df.shape[0]} filas, {df.shape[1]} columnas)")
     print("=" * 70)
@@ -100,7 +88,7 @@ def explorar_todo(tablas):
 
 
 def revisar_duplicados(tablas):
-    """Duplicados por fila completa y por llave primaria en cada tabla."""
+    
     print("\n" + "=" * 70)
     print("REVISIÓN DE DUPLICADOS")
     print("=" * 70)
@@ -118,7 +106,7 @@ def revisar_duplicados(tablas):
 
 
 def revisar_categorias(tablas):
-    """Busca variantes de una misma categoría (espacios, mayúsculas/minúsculas)."""
+   
     print("\n" + "=" * 70)
     print("REVISIÓN DE CATEGORÍAS INCONSISTENTES")
     print("=" * 70)
@@ -136,16 +124,8 @@ def revisar_categorias(tablas):
 
 
 
-# 2. LIMPIEZA
-
 def limpiar_tablas(tablas):
-    """
-    Maneja los nulos según su significado:
-    - segundo_nombre / observaciones: campos OPCIONALES. No son un dato
-      perdido, así que no se imputan con media o mediana.
-    - fecha_devolucion: nulo = préstamo todavía sin cerrar. Inventar una
-      fecha falsearía el análisis, por eso se conserva el nulo y se marca.
-    """
+   
     t = {k: v.copy() for k, v in tablas.items()}
 
     for nombre in ("autor", "usuario"):
@@ -168,10 +148,8 @@ def limpiar_tablas(tablas):
 
 
 
-# 3. DATASET POR PRÉSTAMO
 
 def construir_prestamos(t):
-    """Un registro por préstamo, con columnas derivadas útiles al proyecto."""
     p = t["prestamo"].copy()
 
     pe = t["prestamo_ejemplar"].assign(
@@ -189,7 +167,7 @@ def construir_prestamos(t):
 
     corte = df[["fecha_prestamo", "fecha_devolucion", "fecha_limite"]].max().max()
 
-    # --- columnas derivadas ---
+    
     df["plazo_dias"] = (df["fecha_limite"] - df["fecha_prestamo"]).dt.days
     df["devuelto"] = df["fecha_devolucion"].notna()
     df["dias_prestamo"] = (df["fecha_devolucion"] - df["fecha_prestamo"]).dt.days
@@ -205,7 +183,7 @@ def construir_prestamos(t):
 
 
 def revisar_imposibles_y_atipicos(df):
-    """Valores imposibles y atípicos del dataset por préstamo, con la decisión tomada."""
+   
     print("\n" + "=" * 70)
     print("VALORES IMPOSIBLES Y ATÍPICOS")
     print("=" * 70)
@@ -240,7 +218,6 @@ def revisar_imposibles_y_atipicos(df):
 
 
 def tabla_antes_despues(antes, despues):
-    """Compara filas, columnas y nulos de prestamo.csv (antes) y el dataset final (después)."""
     tabla = pd.DataFrame({
         "antes (prestamo.csv)": [antes.shape[0], antes.shape[1], int(antes.isnull().sum().sum())],
         "despues (proyecto_limpio.csv)": [despues.shape[0], despues.shape[1],
@@ -257,7 +234,6 @@ def tabla_antes_despues(antes, despues):
 
 
 def construir_demanda_libros(t):
-    """Por libro: cuántos ejemplares tiene y cuántas veces se ha prestado."""
     ej = t["ejemplar"][["id_ejemplar", "id_libro"]]
     veces = (t["prestamo_ejemplar"].merge(ej, on="id_ejemplar")
              .groupby("id_libro").size().rename("prestamos"))
@@ -267,15 +243,6 @@ def construir_demanda_libros(t):
 
 
 def exportar_libros_demanda(t, libros):
-    """
-    Dataset con un registro por libro para el segundo perceptrón (demanda del libro).
-    - prestado: variable objetivo 0/1 (1 = el libro se ha prestado al menos una vez).
-    - prestamos: cuántas veces se prestó. Se guarda solo como referencia: NO es entrada
-      porque contiene la respuesta (prestado = prestamos > 0).
-    - ejemplares: copias que tiene la biblioteca del libro (entrada 1).
-    - anio_edicion: año de la edición MÁS RECIENTE entre sus ejemplares (entrada 2).
-      Los ejemplares de un mismo libro traen años distintos, por eso se resume en un valor.
-    """
     anio = (t["ejemplar"].groupby("id_libro")["anio_edicion"].max()
             .rename("anio_edicion").reset_index())
     out = libros.merge(anio, on="id_libro", how="left")
@@ -290,7 +257,6 @@ def exportar_libros_demanda(t, libros):
 
 
 def construir_demanda_generos(t):
-    """Préstamos (a nivel ejemplar) por género."""
     x = (t["prestamo_ejemplar"]
          .merge(t["ejemplar"][["id_ejemplar", "id_libro"]], on="id_ejemplar")
          .merge(t["libro_genero"], on="id_libro")
@@ -299,7 +265,7 @@ def construir_demanda_generos(t):
 
 
 
-# 4. HALLAZGOS
+
 
 def imprimir_hallazgos(t, df, libros, generos):
     dev = df[df["devuelto"]]
@@ -369,8 +335,6 @@ def imprimir_hallazgos(t, df, libros, generos):
 
 
 
-# 5. VISUALIZACIONES
-
 def guardar(nombre):
     plt.tight_layout()
     plt.savefig(GRAFICOS / nombre, dpi=150)
@@ -381,7 +345,6 @@ def visualizar(df, libros, generos):
     GRAFICOS.mkdir(parents=True, exist_ok=True)
     dev = df[df["devuelto"]].copy()
 
-    # 1. Histograma + densidad: cuántos días se queda el libro
     plt.figure(figsize=(8, 5))
     sns.histplot(data=dev, x="dias_prestamo", bins=20, kde=True, color="steelblue")
     plt.axvline(dev["dias_prestamo"].median(), color="crimson", linestyle="--",
@@ -392,7 +355,6 @@ def visualizar(df, libros, generos):
     plt.legend()
     guardar("biblioteca_hist_dias_prestamo.png")
 
-    # 2. Barras: % de devoluciones tardías según el plazo concedido
     resumen = (dev.groupby("plazo_dias")["con_retraso"]
                .apply(lambda s: s.astype(float).mean() * 100)
                .rename("pct_retraso").reset_index())
@@ -407,7 +369,6 @@ def visualizar(df, libros, generos):
     plt.ylabel("% devuelto con retraso")
     guardar("biblioteca_barras_retraso_por_plazo.png")
 
-    # 3. Boxplot: días de retraso por rol de usuario
     orden = dev.groupby("rol")["dias_retraso"].median().sort_values().index
     plt.figure(figsize=(9, 5.5))
     sns.boxplot(data=dev, x="rol", y="dias_retraso", order=orden,
@@ -418,7 +379,6 @@ def visualizar(df, libros, generos):
     plt.ylabel("Días de retraso")
     guardar("biblioteca_boxplot_retraso_por_rol.png")
 
-    # 4. Regresión: ejemplares por libro vs veces prestado
     plt.figure(figsize=(8, 5.5))
     sns.regplot(data=libros, x="ejemplares", y="prestamos",
                 x_jitter=0.15, y_jitter=0.15,
@@ -428,7 +388,6 @@ def visualizar(df, libros, generos):
     plt.ylabel("Número de préstamos")
     guardar("biblioteca_regresion_ejemplares_prestamos.png")
 
-    # 5. Barras horizontales: géneros más prestados
     top = generos.head(10)
     plt.figure(figsize=(9, 5.5))
     ax = sns.barplot(data=top, y="genero", x="prestamos", hue="genero",
@@ -445,18 +404,7 @@ def visualizar(df, libros, generos):
 
 
 
-# 6. PREPARACIÓN PARA MACHINE LEARNING
-
 def preparar_ml(df):
-    """
-    Dataset para predecir si un préstamo se devolverá tarde.
-    - Solo préstamos devueltos: en los demás no se conoce el resultado.
-    - One-Hot para 'rol' (nominal, sin orden).
-    - Se excluyen 'multa' y 'dias_prestamo': contienen la respuesta
-      (multa = tarifa x días de retraso; retraso = días - plazo).
-    - Se excluye 'tiene_observacion': podría escribirse al cerrar el
-      préstamo y filtrar información del resultado.
-    """
     dev = df[df["devuelto"]].copy()
     columnas = ["plazo_dias", "n_ejemplares", "limite_prestamos",
                 "mes_prestamo", "dia_semana", "rol",
@@ -481,7 +429,7 @@ def main():
     explorar_todo(tablas)
     revisar_duplicados(tablas)
     revisar_categorias(tablas)
-    prestamo_original = tablas["prestamo"].copy()   # para la tabla antes / después
+    prestamo_original = tablas["prestamo"].copy()
 
     print("\n" + "=" * 70)
     print("LIMPIEZA")

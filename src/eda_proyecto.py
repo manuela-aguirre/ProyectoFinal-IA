@@ -2,7 +2,7 @@ import os
 from collections import Counter
 
 import matplotlib
-matplotlib.use("Agg")  # Genera imágenes sin necesitar pantalla (necesario en Docker)
+matplotlib.use("Agg")  
 import matplotlib.pyplot as plt
 import numpy as np
 

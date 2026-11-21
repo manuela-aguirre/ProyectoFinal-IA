@@ -2,7 +2,7 @@
 from pathlib import Path
 
 import matplotlib
-matplotlib.use("Agg")  # Sin pantalla (Docker/WSL): los gráficos solo se guardan en archivo
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
@@ -60,9 +60,9 @@ def entrenar(X, y, w, b, tasa, epocas):
         p = predecir_probabilidad(X, w, b)
         historial.append(perdida_logaritmica(y, p))
 
-        error = p - y                    # con sigmoide + log-pérdida el gradiente es p - y
-        grad_w = X.T @ error / n         # derivada de la pérdida respecto a cada peso
-        grad_b = error.mean()            # derivada respecto al bias
+        error = p - y
+        grad_w = X.T @ error / n
+        grad_b = error.mean()
 
         w = w - tasa * grad_w
         b = b - tasa * grad_b
@@ -181,7 +181,6 @@ def main():
           f"ejemplares = ({media[0]:.2f}, {desv[0]:.2f}) | "
           f"anio_edicion = ({media[1]:.2f}, {desv[1]:.2f})")
 
-    # Parámetros iniciales: los mismos valores de la neurona de clase
     w = np.array([0.1, 0.1])
     b = 0.0
     perdida_inicial = perdida_logaritmica(y_ent, predecir_probabilidad(X_ent, w, b))

@@ -1,10 +1,4 @@
-"""
-neuronas_logicas.py
-Actividad independiente - Clase 8
-Neuronas artificiales que aprenden las compuertas lógicas OR y NOT.
-La neurona está hecha en Python puro; solo el gráfico usa Seaborn.
-Al final hay una prueba extra con XOR para responder la pregunta del README.
-"""
+
 import os
 import matplotlib.pyplot as plt
 import pandas as pd

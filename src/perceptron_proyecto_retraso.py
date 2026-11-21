@@ -31,28 +31,28 @@ ETIQUETA_X2 = "Ejemplares por préstamo"
 
 
 def sigmoide(z):
-    """Convierte z en una probabilidad entre 0 y 1."""
+
     return 1.0 / (1.0 + np.exp(-z))
 
 
 def predecir_probabilidad(X, w, b):
-    """z = X·w + b, pasado por la sigmoide (X tiene una fila por préstamo)."""
+  
     return sigmoide(X @ w + b)
 
 
 def perdida_logaritmica(y, p):
-    """Entropía cruzada binaria. Se recorta p para evitar log(0)."""
+   
     p = np.clip(p, 1e-12, 1 - 1e-12)
     return -np.mean(y * np.log(p) + (1 - y) * np.log(1 - p))
 
 
 def exactitud(y, p, umbral=0.5):
-    """Proporción de aciertos al clasificar con p >= 0.5 como retraso."""
+    
     return np.mean((p >= umbral).astype(int) == y)
 
 
 def entrenar(X, y, w, b, tasa, epocas):
-    """Descenso del gradiente por lotes. Devuelve w, b y la pérdida por época."""
+   
     n = len(y)
     historial = []
     for epoca in range(epocas):
@@ -91,7 +91,7 @@ def cargar_y_dividir():
 
 
 def estandarizar(X_ent, X_pru):
-    """z = (x - media) / desviación. Media y desviación salen SOLO del entrenamiento."""
+    
     media = X_ent.mean(axis=0)
     desv = X_ent.std(axis=0)
     return (X_ent - media) / desv, (X_pru - media) / desv, media, desv
